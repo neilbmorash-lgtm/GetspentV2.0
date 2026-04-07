@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Spent — Bajinga</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --surface2: #22222c;
+    --border: #2e2e3a;
+    --accent: #e8ff47;
+    --accent2: #ff6b6b;
+    --text: #f0f0f5;
+    --muted: #6b6b80;
+    --needs: #4ecdc4;
+    --wants: #ff9f43;
+    --financial: #a29bfe;
+    --income: #55efc4;
+    --success: #00b894;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 40px;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    padding: 24px 20px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-left .greeting {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .header-left .name {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .header-right {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .date-display {
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  /* Amount input — hero element */
+  .amount-section {
+    padding: 28px 20px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .amount-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .amount-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .currency-symbol {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .amount-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    min-width: 80px;
+    letter-spacing: -2px;
+  }
+  .amount-value.has-value { color: var(--accent); }
+  .amount-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .amount-tap-zone {
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 12px;
+    transition: background 0.15s;
+  }
+  .amount-tap-zone:active { background: var(--surface); }
+
+  /* Section label */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Category grid */
+  .category-section { padding: 0 20px; margin-bottom: 20px; }
+
+  .bucket-group { margin-bottom: 16px; }
+  .bucket-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bucket-label.needs { color: var(--needs); }
+  .bucket-label.wants { color: var(--wants); }
+  .bucket-label.financial { color: var(--financial); }
+  .bucket-label.income { color: var(--income); }
+
+  .bucket-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .needs .bucket-dot { background: var(--needs); }
+  .wants .bucket-dot { background: var(--wants); }
+  .financial .bucket-dot { background: var(--financial); }
+  .income .bucket-dot { background: var(--income); }
+
+  .cat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .cat-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .cat-btn:active { transform: scale(0.96); }
+
+  .cat-btn.selected-needs {
+    background: rgba(78,205,196,0.15);
+    border-color: var(--needs);
+    color: var(--needs);
+  }
+  .cat-btn.selected-wants {
+    background: rgba(255,159,67,0.15);
+    border-color: var(--wants);
+    color: var(--wants);
+  }
+  .cat-btn.selected-financial {
+    background: rgba(162,155,254,0.15);
+    border-color: var(--financial);
+    color: var(--financial);
+  }
+  .cat-btn.selected-income {
+    background: rgba(85,239,196,0.15);
+    border-color: var(--income);
+    color: var(--income);
+  }
+
+  /* Location input */
+  .location-section { padding: 0 20px; margin-bottom: 20px; }
+  .text-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .text-input::placeholder { color: var(--muted); }
+  .text-input:focus { border-color: var(--accent); }
+
+  /* Quality buttons */
+  .quality-section { padding: 0 20px; margin-bottom: 24px; }
+  .quality-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .quality-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .quality-btn .q-emoji { font-size: 20px; }
+  .quality-btn:active { transform: scale(0.96); }
+  .quality-btn.selected-standard {
+    background: rgba(0,184,148,0.12);
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .quality-btn.selected-treat {
+    background: rgba(255,107,107,0.12);
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+  .quality-btn.selected-unexpected {
+    background: rgba(232,255,71,0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Notes */
+  .notes-section { padding: 0 20px; margin-bottom: 24px; }
+
+  /* Date override */
+  .date-section { padding: 0 20px; margin-bottom: 24px; }
+  .date-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .date-toggle-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .date-toggle-value {
+    font-size: 13px;
+    color: var(--text);
+    margin-left: auto;
+  }
+  .date-input-row { margin-top: 10px; display: none; }
+  .date-input-row.visible { display: block; }
+  input[type="date"].text-input { color-scheme: dark; }
+
+  /* Submit button */
+  .submit-section { padding: 0 20px; }
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    padding: 18px;
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f0f13;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .submit-btn:active { transform: scale(0.98); background: #d4eb30; }
+  .submit-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; transform: none; }
+
+  /* Status message */
+  .status-msg {
+    margin: 12px 20px 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: none;
+    text-align: center;
+  }
+  .status-msg.error { background: rgba(255,107,107,0.15); color: var(--accent2); border: 1px solid var(--accent2); display: block; }
+  .status-msg.loading { background: rgba(232,255,71,0.08); color: var(--accent); border: 1px solid var(--border); display: block; }
+
+  /* Confirmation overlay */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,19,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .confirm-overlay.visible { opacity: 1; pointer-events: all; }
+  .confirm-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+  }
+  .confirm-overlay.visible .confirm-card { transform: translateY(0); }
+  .confirm-check {
+    font-size: 52px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .confirm-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .confirm-cat {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .confirm-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .confirm-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 24px;
+    overflow: hidden;
+  }
+  .confirm-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 2.5s linear;
+  }
+
+  /* Google Sheets config banner */
+  .config-banner {
+    margin: 16px 20px 0;
+    padding: 14px 16px;
+    background: rgba(162,155,254,0.1);
+    border: 1px solid var(--financial);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--financial);
+    line-height: 1.5;
+  }
+  .config-banner strong { display: block; margin-bottom: 4px; font-size: 13px; }
+  .config-banner code {
+    background: rgba(162,155,254,0.15);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── CONFIGURATION ─────────────────────────────────── -->
+<!-- Replace these two values after setting up Google Sheets -->
+<script>
+  const SHEET_ID   = 'https://docs.google.com/spreadsheets/d/1HZ4CrmPrBrTk7xJqedLCOs3pDxfpdr3YdoSPLPQMnPg/edit?gid=840694010#gid=840694010';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYF0UoiLz5tP1G8IncUZlK11ygR4Cquy2zBYoHYmYaZimgm1F9Nw4pr3M3lMPsLOYLRQ/exec';
+  const PERSON     = 'Bajinga';
+  const SHEET_CONFIGURED = (SHEET_ID !== 'YOUR_GOOGLE_SHEET_ID');
+</script>
+
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<div class="header">
+  <div class="header-left">
+    <div class="greeting">logging as</div>
+    <div class="name">Bajinga</div>
+  </div>
+  <div class="header-right">
+    <div class="date-display" id="headerDate"></div>
+    <div>Get Spent</div>
+  </div>
+</div>
+
+<!-- Config banner (shown until Google Sheets is wired up) -->
+<div class="config-banner" id="configBanner" style="display:none">
+  <strong>⚡ One step left to go live</strong>
+  Replace <code>SHEET_ID</code> and <code>SCRIPT_URL</code> at the top of this file with your Google credentials. Instructions below.
+</div>
+
+<!-- ── AMOUNT ─────────────────────────────────────────── -->
+<div class="amount-section">
+  <div class="amount-label">amount</div>
+  <div class="amount-tap-zone" onclick="focusAmount()">
+    <div class="amount-display">
+      <span class="currency-symbol">$</span>
+      <span class="amount-value" id="amountDisplay">0</span>
+    </div>
+  </div>
+  <input type="number" class="amount-input" id="amountInput"
+         inputmode="decimal" placeholder="0" min="0" step="0.01"
+         oninput="updateAmountDisplay()">
+</div>
+
+<!-- ── CATEGORY ───────────────────────────────────────── -->
+<div class="section-label">category</div>
+<div class="category-section">
+
+  <div class="bucket-group">
+    <div class="bucket-label needs"><span class="bucket-dot"></span>Needs</div>
+    <div class="cat-grid" id="catNeeds"></div>
+  </div>
+
+  <div class="bucket-group">
+    <div class="bucket-label wants"><span class="bucket-dot"></span>Wants</div>
+    <div class="cat-grid" id="catWants"></div>
+  </div>
+
+  <div class="bucket-group">
+    <div class="bucket-label financial"><span class="bucket-dot"></span>Financial</div>
+    <div class="cat-grid" id="catFinancial"></div>
+  </div>
+
+  <div class="bucket-group">
+    <div class="bucket-label income"><span class="bucket-dot"></span>Income</div>
+    <div class="cat-grid" id="catIncome"></div>
+  </div>
+
+</div>
+
+<!-- ── LOCATION ───────────────────────────────────────── -->
+<div class="section-label">location</div>
+<div class="location-section">
+  <input type="text" class="text-input" id="locationInput"
+         placeholder="Where did you spend?" autocomplete="off" list="locationSuggestions">
+  <datalist id="locationSuggestions"></datalist>
+</div>
+
+<!-- ── QUALITY ────────────────────────────────────────── -->
+<div class="section-label">quality</div>
+<div class="quality-section">
+  <div class="quality-grid">
+    <button class="quality-btn" data-quality="Standard" onclick="selectQuality(this)">
+      <span class="q-emoji">✅</span>Standard
+    </button>
+    <button class="quality-btn" data-quality="Treat" onclick="selectQuality(this)">
+      <span class="q-emoji">🍬</span>Treat
+    </button>
+    <button class="quality-btn" data-quality="Unexpected" onclick="selectQuality(this)">
+      <span class="q-emoji">⚡</span>Unexpected
+    </button>
+  </div>
+</div>
+
+<!-- ── NOTES ──────────────────────────────────────────── -->
+<div class="section-label">notes <span style="font-size:9px;color:var(--muted);margin-left:4px">(optional)</span></div>
+<div class="notes-section">
+  <input type="text" class="text-input" id="notesInput"
+         placeholder="Any context worth remembering?">
+</div>
+
+<!-- ── DATE OVERRIDE ──────────────────────────────────── -->
+<div class="section-label">date</div>
+<div class="date-section">
+  <div class="date-toggle" onclick="toggleDateOverride()">
+    <span class="date-toggle-label">Today</span>
+    <span class="date-toggle-value" id="dateSummary"></span>
+    <span style="color:var(--muted);font-size:12px">change ›</span>
+  </div>
+  <div class="date-input-row" id="dateInputRow">
+    <input type="date" class="text-input" id="dateInput">
+  </div>
+</div>
+
+<!-- ── SUBMIT ─────────────────────────────────────────── -->
+<div class="submit-section">
+  <button class="submit-btn" id="submitBtn" onclick="submitEntry()">Log It</button>
+  <div class="status-msg" id="statusMsg"></div>
+</div>
+
+<!-- ── CONFIRMATION OVERLAY ───────────────────────────── -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-card">
+    <span class="confirm-check">✦</span>
+    <div class="confirm-amount" id="confirmAmount"></div>
+    <div class="confirm-cat" id="confirmCat"></div>
+    <div class="confirm-sub" id="confirmSub"></div>
+    <div class="confirm-bar">
+      <div class="confirm-bar-fill" id="confirmBarFill"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────
+const CATEGORIES = {
+  Needs:     ["Rent","Groceries","Transport / Fuel","Utilities","Insurance","Health","Medication","Pet","Home & Maintenance"],
+  Wants:     ["Dining Out","Coffee & Drinks","Shopping","Hobby / Fun","Personal Care","Travel","Gifts","Subscriptions"],
+  Financial: ["Debt Payments","Emergency Fund","Retirement / Investing"],
+  Income:    ["Paycheck","Other Income"]
+};
+
+const BUCKET_MAP = {};
+Object.entries(CATEGORIES).forEach(([bucket, cats]) =>
+  cats.forEach(c => BUCKET_MAP[c] = bucket.toLowerCase())
+);
+
+let selectedCategory = null;
+let selectedQuality  = null;
+let dateOverride     = false;
+
+// ── INIT ──────────────────────────────────────────────────
+function init() {
+  // Date header
+  const now = new Date();
+  document.getElementById('headerDate').textContent =
+    now.toLocaleDateString('en-CA', {weekday:'short', month:'short', day:'numeric'});
+  document.getElementById('dateSummary').textContent =
+    now.toLocaleDateString('en-CA', {weekday:'short', month:'short', day:'numeric'});
+  document.getElementById('dateInput').value = now.toISOString().split('T')[0];
+
+  // Config banner
+  if (!SHEET_CONFIGURED) {
+    document.getElementById('configBanner').style.display = 'block';
+  }
+
+  // Build category grids
+  Object.entries(CATEGORIES).forEach(([bucket, cats]) => {
+    const grid = document.getElementById('cat' + bucket);
+    cats.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-btn';
+      btn.textContent = cat;
+      btn.dataset.cat = cat;
+      btn.dataset.bucket = bucket.toLowerCase();
+      btn.onclick = () => selectCategory(btn);
+      grid.appendChild(btn);
+    });
+  });
+
+  // Location suggestions from localStorage
+  updateLocationSuggestions();
+
+  // Focus amount
+  setTimeout(() => focusAmount(), 300);
+}
+
+// ── AMOUNT ────────────────────────────────────────────────
+function focusAmount() {
+  document.getElementById('amountInput').focus();
+}
+function updateAmountDisplay() {
+  const val = document.getElementById('amountInput').value;
+  const display = document.getElementById('amountDisplay');
+  display.textContent = val || '0';
+  display.classList.toggle('has-value', !!val && val !== '0');
+}
+
+// ── CATEGORY ──────────────────────────────────────────────
+function selectCategory(btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.className = 'cat-btn';
+  });
+  const bucket = btn.dataset.bucket;
+  btn.classList.add('selected-' + bucket);
+  selectedCategory = btn.dataset.cat;
+}
+
+// ── QUALITY ───────────────────────────────────────────────
+function selectQuality(btn) {
+  document.querySelectorAll('.quality-btn').forEach(b => b.className = 'quality-btn');
+  const q = btn.dataset.quality.toLowerCase();
+  btn.classList.add('selected-' + q);
+  selectedQuality = btn.dataset.quality;
+}
+
+// ── DATE ──────────────────────────────────────────────────
+function toggleDateOverride() {
+  dateOverride = !dateOverride;
+  document.getElementById('dateInputRow').classList.toggle('visible', dateOverride);
+}
+
+function getDate() {
+  if (dateOverride) {
+    return document.getElementById('dateInput').value;
+  }
+  return new Date().toISOString().split('T')[0];
+}
+
+function getMonthName(dateStr) {
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[new Date(dateStr + 'T12:00:00').getMonth()];
+}
+
+// ── LOCATION SUGGESTIONS ──────────────────────────────────
+function updateLocationSuggestions() {
+  const saved = JSON.parse(localStorage.getItem('bajinga_locations') || '[]');
+  const dl = document.getElementById('locationSuggestions');
+  dl.innerHTML = '';
+  saved.forEach(loc => {
+    const opt = document.createElement('option');
+    opt.value = loc;
+    dl.appendChild(opt);
+  });
+}
+
+function saveLocation(loc) {
+  if (!loc) return;
+  const saved = JSON.parse(localStorage.getItem('bajinga_locations') || '[]');
+  if (!saved.includes(loc)) {
+    saved.unshift(loc);
+    if (saved.length > 30) saved.pop();
+    localStorage.setItem('bajinga_locations', JSON.stringify(saved));
+    updateLocationSuggestions();
+  }
+}
+
+// ── SUBMIT ────────────────────────────────────────────────
+async function submitEntry() {
+  const amount   = parseFloat(document.getElementById('amountInput').value);
+  const location = document.getElementById('locationInput').value.trim();
+  const notes    = document.getElementById('notesInput').value.trim();
+  const dateStr  = getDate();
+
+  // Validation
+  if (!amount || amount <= 0) return showStatus('Enter an amount first', 'error');
+  if (!selectedCategory)      return showStatus('Pick a category', 'error');
+  if (!selectedQuality)       return showStatus('Pick a quality tier', 'error');
+
+  const month  = getMonthName(dateStr);
+  const year   = new Date(dateStr + 'T12:00:00').getFullYear();
+  const bucket = BUCKET_MAP[selectedCategory] || '';
+  const timestamp = new Date().toISOString().replace('T',' ').substring(0,19);
+
+  const row = {
+    timestamp,
+    person:   PERSON,
+    date:     dateStr,
+    category: selectedCategory,
+    bucket,
+    location,
+    cost:     amount,
+    quality:  selectedQuality,
+    notes,
+    month,
+    year
+  };
+
+  if (!SHEET_CONFIGURED) {
+    // Demo mode — just show confirmation
+    showConfirmation(amount, selectedCategory, location);
+    saveLocation(location);
+    resetForm();
+    return;
+  }
+
+  showStatus('Saving...', 'loading');
+  document.getElementById('submitBtn').disabled = true;
+
+  try {
+    const resp = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(row)
+    });
+    saveLocation(location);
+    showConfirmation(amount, selectedCategory, location);
+    resetForm();
+  } catch (err) {
+    showStatus('Could not save — check your connection', 'error');
+    document.getElementById('submitBtn').disabled = false;
+  }
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+}
+
+function clearStatus() {
+  const el = document.getElementById('statusMsg');
+  el.className = 'status-msg';
+}
+
+// ── CONFIRMATION ──────────────────────────────────────────
+function showConfirmation(amount, category, location) {
+  document.getElementById('confirmAmount').textContent = '$' + amount.toFixed(2);
+  document.getElementById('confirmCat').textContent = category;
+  document.getElementById('confirmSub').textContent = location || 'logged ✦ ' + new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+
+  const overlay = document.getElementById('confirmOverlay');
+  overlay.classList.add('visible');
+
+  // Animate progress bar
+  setTimeout(() => {
+    document.getElementById('confirmBarFill').style.width = '100%';
+  }, 50);
+
+  // Auto-dismiss after 2.5s
+  setTimeout(() => {
+    overlay.classList.remove('visible');
+    document.getElementById('confirmBarFill').style.width = '0%';
+    document.getElementById('confirmBarFill').style.transition = 'none';
+    setTimeout(() => {
+      document.getElementById('confirmBarFill').style.transition = 'width 2.5s linear';
+    }, 100);
+  }, 2600);
+}
+
+// ── RESET ─────────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('amountInput').value = '';
+  document.getElementById('locationInput').value = '';
+  document.getElementById('notesInput').value = '';
+  document.getElementById('amountDisplay').textContent = '0';
+  document.getElementById('amountDisplay').classList.remove('has-value');
+  document.querySelectorAll('.cat-btn').forEach(b => b.className = 'cat-btn');
+  document.querySelectorAll('.quality-btn').forEach(b => b.className = 'quality-btn');
+  selectedCategory = null;
+  selectedQuality  = null;
+  dateOverride     = false;
+  document.getElementById('dateInputRow').classList.remove('visible');
+  document.getElementById('submitBtn').disabled = false;
+  clearStatus();
+  setTimeout(() => focusAmount(), 200);
+}
+
+init();
+</script>
+</body>
+</html>
