@@ -1,0 +1,24 @@
+{
+  "name": "Get Spent",
+  "short_name": "Get Spent",
+  "description": "Personal spending tracker for Nemo & Bajinga",
+  "start_url": "/GetspentV2.0/getspent.html",
+  "display": "standalone",
+  "background_color": "#09090f",
+  "theme_color": "#09090f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
